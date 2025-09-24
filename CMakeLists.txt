@@ -49,6 +49,8 @@ target_sources(${LIBNAME}
     PRIVATE
     src/register_types.cpp
     src/register_types.h
+    src/example_class.cpp
+    src/example_class.h
 )
 
 # Fetch a list of the xml files to use for documentation and add to our target
@@ -62,6 +64,9 @@ if(DOC_XML)
 endif()
 
 target_link_libraries(${LIBNAME} PRIVATE godot-cpp)
+
+# Require at least C++17 for this target
+set_property(TARGET ${LIBNAME} PROPERTY CXX_STANDARD 17)
 
 set_target_properties(${LIBNAME}
     PROPERTIES
