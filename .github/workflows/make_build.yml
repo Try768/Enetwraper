@@ -1,26 +1,6 @@
 # For syntax, see https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
 # This workflow is triggered manually on the "Actions" tab on GitHub, and can be used to create releases.
-
-name: Make a GDExtension build for all supported platforms
-on:
-  workflow_dispatch:
-
-jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        # A build is made for every possible combination of parameters
-        # You can add or remove entries from the arrays of each parameter to customize which builds you want to run.
-        # See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/running-variations-of-jobs-in-a-workflow
-        target:[
-          { 
-            platform: windows,
-            arch: arm64, 
-            os: windows-latest 
-          }
-        ]
-        #{ platform: linux, arch: x86_64, os: ubuntu-22.04 },
+#{ platform: linux, arch: x86_64, os: ubuntu-22.04 },
             #{ platform: linux, arch: x86_32, os: ubuntu-22.04 },
             #{ platform: linux, arch: arm64, os: ubuntu-22.04-arm },
             #{ platform: linux, arch: arm32, os: ubuntu-22.04-arm },
@@ -33,12 +13,28 @@ jobs:
             #{ platform: android, arch: arm64, os: ubuntu-22.04 },
             #{ platform: android, arch: arm32, os: ubuntu-22.04 },
             #{ platform: ios, arch: arm64, os: macos-latest },
-            #{ platform: web, arch: wasm32, os: ubuntu-22.04 },
-        
+            #{ platform: web, arch: wasm32, os: ubuntu-22.04 }
+name: Make a GDExtension build for all supported platforms
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        # A build is made for every possible combination of parameters
+        # You can add or remove entries from the arrays of each parameter to customize which builds you want to run.
+        # See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/running-variations-of-jobs-in-a-workflow
+        #target: [ { platform: windows, arch: arm64, os: windows-latest } ]
+        platform: [windows]
+        arch: [arm64]
+        os: [windows-latest]
         target-type: [template_debug, template_release]
         float-precision: [single]
-
-    runs-on: ${{ matrix.target.os }}
+        #target-type: [ template_debug, template_release ]
+        #float-precision: [single]
+    runs-on: ${{ matrix.os }}
     steps:
       # Clone this repository
       - name: Checkout
@@ -48,7 +44,7 @@ jobs:
 
       # Add linux x86_32 toolchain
       - name: Install multilib support
-        if: ${{ matrix.target.platform == 'linux' && matrix.target.arch == 'x86_32' }}
+        if: ${{ matrix.platform == 'linux' && matrix.arch == 'x86_32' }}
         run: |
           sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib
 
@@ -56,7 +52,7 @@ jobs:
       - name: Setup godot-cpp
         uses: ./godot-cpp/.github/actions/setup-godot-cpp
         with:
-          platform: ${{ matrix.target.platform }}
+          platform: ${{ matrix.platform }}
           em-version: 3.1.62
 
       # Build GDExtension (with caches)
@@ -65,20 +61,20 @@ jobs:
         uses: ./godot-cpp/.github/actions/godot-cache-restore
         with:
           scons-cache: ${{ github.workspace }}/.scons-cache/
-          cache-name: ${{ matrix.target.platform }}_${{ matrix.target.arch }}_${{ matrix.float-precision }}_${{ matrix.target-type }}
+          cache-name: ${{ matrix.platform }}_${{ matrix.arch }}_${{ matrix.float-precision }}_${{ matrix.target-type }}
 
       - name: Build GDExtension Debug Build
         shell: sh
         env:
           SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
         run: |
-          scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }}
+          scons target=${{ matrix.target-type }} platform=${{ matrix.platform }} arch=${{ matrix.arch }} precision=${{ matrix.float-precision }}
 
       - name: Save .scons_cache
         uses: ./godot-cpp/.github/actions/godot-cache-save
         with:
           scons-cache: ${{ github.workspace }}/.scons-cache/
-          cache-name: ${{ matrix.target.platform }}_${{ matrix.target.arch }}_${{ matrix.float-precision }}_${{ matrix.target-type }}
+          cache-name: ${{ matrix.platform }}_${{ matrix.arch }}_${{ matrix.float-precision }}_${{ matrix.target-type }}
 
       # Clean up compilation files
       - name: Windows - Delete compilation files
@@ -91,7 +87,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: godot-cpp-template-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}
+          name: godot-cpp-template-${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}
           path: |
             ${{ github.workspace }}/bin/**
 
