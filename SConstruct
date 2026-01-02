@@ -26,7 +26,6 @@ env.Append(
         "lib/",
     ],
     LIBS=[
-        "mylib",
         "user32",
         "ws2_32",
     ],
