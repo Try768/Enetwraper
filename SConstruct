@@ -8,7 +8,7 @@ from methods import print_error
 libname = "EXTENSION-NAME"
 projectdir = "demo"
 
-localEnv = Environment(tools=["default"], PLATFORM="")
+localEnv = Environment(tools=["default","msvc"], PLATFORM="")
 
 # Build profiles can be used to decrease compile times.
 # You can either specify "disabled_classes", OR
